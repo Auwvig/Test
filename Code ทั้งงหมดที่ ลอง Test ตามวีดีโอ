@@ -1,0 +1,220 @@
+Code google form sent email system
+
+backup 1.1 (9.18min)
+function myFunction() {
+  
+}
+
+
+function createPDF() {
+  'First Name'['Jane'],
+  'Last Name'['Doe'],
+  'Shipping Address'['123'],
+  'Quantity Require'['45'],
+
+};
+
+const PdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB")
+const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1")
+const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY/edit?tab=t.0")
+
+const newTempFile = templateDoc.makeCopy (tempFolder);
+
+const OpenDoc = DocumentApp.openById(newTempFile.getId());
+const body =OpenDoc.getBody();
+body.replaceText("{fn}",info['First Name'][0]);
+body.replaceText("{ln}",info['Last Name'][0]);
+body.replaceText("{addr}",info['First Name'][0]);
+body.replaceText("{qty}",info['Quantity Required'][0]);
+OpenDoc.saveAndClose();
+
+
+const blobPDF = newTempFile.getAs(MimeType.PDF);
+const pdffile = PdfFolder.createFile(blobPDF.setName("My PDF"))
+
+
+
+
+
+1.1 (9.18min) Debug version
+function myFunction() {
+  createPDF();
+}
+
+function createPDF() {
+  const info = {
+    'First Name': 'Jane',
+    'Last Name': 'Doe',
+    'Shipping Address': '123',
+    'Quantity Required': '45'
+  };
+
+  const PdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB");
+  const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1");
+  const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY");
+
+  const newTempFile = templateDoc.makeCopy(tempFolder);
+  const OpenDoc = DocumentApp.openById(newTempFile.getId());
+  const body = OpenDoc.getBody();
+
+  // Replace text placeholders with values
+  body.replaceText("{fn}", info['First Name']);
+  body.replaceText("{ln}", info['Last Name']);
+  body.replaceText("{addr}", info['Shipping Address']);
+  body.replaceText("{qty}", info['Quantity Required']);
+  OpenDoc.saveAndClose();
+
+  // Convert the new document to PDF and save in the specified folder
+  const blobPDF = newTempFile.getAs(MimeType.PDF);
+  const pdffile = PdfFolder.createFile(blobPDF.setName("My PDF"));
+}
+
+
+backup 1.2 (11.15) Clicker
+
+function afterformSubmit(e) {
+  const info = e.namedValues;  // Corrected property to 'namedValues'
+  createPDF(info);
+}
+
+function createPDF(info) {
+  const PdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB");
+  const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1");
+  const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY");
+
+  const newTempFile = templateDoc.makeCopy(tempFolder);
+  
+  const OpenDoc = DocumentApp.openById(newTempFile.getId());
+  const body = OpenDoc.getBody();
+
+  // Replace text placeholders with values from info
+  body.replaceText("{fn}", info['First Name'][0]);
+  body.replaceText("{ln}", info['Last Name'][0]);
+  body.replaceText("{addr}", info['Shipping Address'][0]);
+  body.replaceText("{qty}", info['Quantity Required'][0]);
+  OpenDoc.saveAndClose();
+
+  // Convert the new document to PDF and save in the specified folder
+  const blobPDF = newTempFile.getAs(MimeType.PDF);
+  const pdfFile = PdfFolder.createFile(blobPDF).setName(info['First Name'][0]+" "+ info['Last Name'][0]);  
+  tempFolder.removeFile(newTempFile);
+}
+
+
+debug 1.2 (11.15) Clicker
+
+
+
+backup 1.3 (19.45) click link
+
+function afterformSubmit(e) {
+  const info = e.namedValues; 
+  const pdfFile = createPDF(info);
+  const entryRow = e.range.getRow();
+  const ws = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("People");
+  ws.getRange(entryRow, 6).setValue(pdfFile.getUrl());
+  ws.getRange(entryRow, 7).setValue(pdfFile.getName());
+}
+
+function createPDF(info) {
+  
+  const PdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB");
+  const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1");
+  const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY");
+
+  const newTempFile = templateDoc.makeCopy(tempFolder);
+  
+  const OpenDoc = DocumentApp.openById(newTempFile.getId());
+  const body = OpenDoc.getBody();
+
+  body.replaceText("{fn}", info['First Name'][0]);
+  body.replaceText("{ln}", info['Last Name'][0]);
+  body.replaceText("{addr}", info['Shipping Address'][0]);
+  body.replaceText("{qty}", info['Quantity Required'][0]);
+  OpenDoc.saveAndClose();
+
+  const blobPDF = newTempFile.getAs(MimeType.PDF);
+  const pdfFile = PdfFolder.createFile(blobPDF).setName(info['First Name'][0]+" "+ info['Last Name'][0]+""+new Date());
+  tempFolder.removeFile(newTempFile);
+  return pdfFile;
+}
+
+
+Backup 1.4 Gmail send (19.20)
+
+function afterformSubmit(e) {
+
+  const info = e.namedValues; 
+  const pdfFile = createPDF(info);
+  const entryRow = e.range.getRow();
+  const ws = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("People");
+  ws.getRange(entryRow, 7).setValue(pdfFile.getUrl());
+  ws.getRange(entryRow, 8).setValue(pdfFile.getName());
+
+  sendEmail(e.namedValues["Email address"][0].pdfFile);
+
+}
+
+function sendEmail(email,pdfFile){
+
+  GmailApp.sendEmail(email, "Here is your PDF","Your PDF is attached.",{
+    attachment: [pdfFile],
+    name: 'My company'
+  });
+}
+
+function createPDF(info) {
+  
+  const PdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB");
+  const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1");
+  const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY");
+
+  const newTempFile = templateDoc.makeCopy(tempFolder);
+  
+  const OpenDoc = DocumentApp.openById(newTempFile.getId());
+  const body = OpenDoc.getBody();
+
+  body.replaceText("{fn}", info['First Name'][0]);
+  body.replaceText("{ln}", info['Last Name'][0]);
+  body.replaceText("{addr}", info['Shipping Address'][0]);
+  body.replaceText("{qty}", info['Quantity Required'][0]);
+  OpenDoc.saveAndClose();
+
+  const blobPDF = newTempFile.getAs(MimeType.PDF);
+  const pdfFile = PdfFolder.createFile(blobPDF).setName(info['First Name'][0]+" "+ info['Last Name'][0]+""+new Date());
+  tempFolder.removeFile(newTempFile);
+  return pdfFile;
+}
+
+Stack 01
+function afterFormSubmit(e) {
+  const info = e.namedValues;
+  const pdfFile = createPDF(info);
+  sendEmail(info['email'][0], pdfFile);
+}
+
+function sendEmail(email, pdfFile) {
+  GmailApp.sendEmail(email, "Subj", "Body", {
+    attachments: [pdfFile],
+    name: 'My Company'
+  });
+}
+
+function createPDF(info) {
+  const pdfFolder = DriveApp.getFolderById("1vefqHEE2vMkJQfJ91LUFUR0SQnMA0dkB");
+  const tempFolder = DriveApp.getFolderById("1dcvOpZEL6a75OIoOn0dTtj59cdlIJyx1");
+  const templateDoc = DriveApp.getFileById("1mMCzCX58MGkfro-hmwXq6nCxKw33OrJ3eIUEG7_p0iY");
+
+  const newTempFile = templateDoc.makeCopy(tempFolder);
+  const openDoc = DocumentApp.openById(newTempFile.getId());
+  const body = openDoc.getBody();
+  body.replaceText("{fn}", info['First Name'][0]);
+  body.replaceText("{ln}", info['Last Name'][0]);
+  body.replaceText("{addr}", info['Shipping Address'][0]);
+  body.replaceText("{qty}", info['Quantity Required'][0]);
+  openDoc.saveAndClose();
+  const blobPDF = newTempFile.getAs(MimeType.PDF);
+  const pdfFile = pdfFolder.createFile(blobPDF).setName(info['First Name'][0] + " " + new Date());
+  newTempFile.setTrashed(true);
+  return pdfFile;
+}
